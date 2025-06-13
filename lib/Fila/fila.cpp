@@ -2,6 +2,7 @@
 
 typedef struct no{
     int numero;
+    unsigned long tempo;
     struct no *proximo;
     struct no *anterior;
 }No;
@@ -18,6 +19,7 @@ public:
     void push(int valor);
     int pop();
     int media();
+    unsigned long tempo_comeco_fila();
 };
 
 fila::fila(){
@@ -45,6 +47,7 @@ void fila::push(int valor) {
         return;
     }
     novo->numero = valor;
+    novo->tempo = millis();
     novo->proximo = NULL; 
     novo->anterior = fim_; 
 
@@ -93,4 +96,8 @@ int fila::pop() {
 
 int fila::media(){
     return media_;
+}
+
+unsigned long fila::tempo_comeco_fila(){
+    return inicio_->tempo;
 }
