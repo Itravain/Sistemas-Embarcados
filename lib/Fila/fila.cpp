@@ -1,26 +1,5 @@
 #include "Arduino.h"
-
-typedef struct no{
-    int numero;
-    unsigned long tempo;
-    struct no *proximo;
-    struct no *anterior;
-}No;
-
-class fila{
-private:
-    int qtd_;
-    No *inicio_;
-    No *fim_;
-    int media_;
-public:
-    fila();
-    ~fila();
-    void push(int valor);
-    int pop();
-    int media();
-    unsigned long tempo_comeco_fila();
-};
+#include "fila.h"
 
 fila::fila(){
     qtd_ = 0;
@@ -94,7 +73,8 @@ int fila::pop() {
     return numero;
 }
 
-int fila::media(){
+int fila::media() const
+{
     return media_;
 }
 

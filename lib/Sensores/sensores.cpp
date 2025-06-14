@@ -1,65 +1,105 @@
-#include "Arduino.h"
+#include "sensores.h"
 #include "fila.h"
+#include <Arduino.h>
 
-class Sensor{
-private:
-    int pino_;
-    int media_atual_;
-    short tensao_ref_;
-    short ultima_tensao_lida;
-    uint8_t qtd_media_movel_;
-    fila media_movel_;
+const float ADC_MAX_VALUE = 1023.0f;
 
-    int leitura();
-public:
-    Sensor(int pino_, short referencia, int tam_media_movel, uint8_t qtd_media_movel);
-    ~Sensor();
-
-    short tensao();
-    float grandeza();
-};
-
-Sensor::Sensor(int pino, short referencia, int tam_media_movel, uint8_t qtd_media_movel)
+Sensor::Sensor(int pino_adc, float referencia_volts, int tam_janela_media_movel, uint8_t qtd_leituras_para_media, float coef_a, float coef_b)
+    : pino_adc_(pino_adc),
+      tensao_referencia_(referencia_volts),
+      tam_janela_media_movel_(tam_janela_media_movel),
+      qtd_leituras_para_media_(qtd_leituras_para_media),
+      coef_a_(coef_a),
+      coef_b_(coef_b),
+      media_movel_(),
+      ultima_tensao_lida_(0.0f)
 {
-    qtd_media_movel_ = qtd_media_movel;
-    pino_ = pino;
-    fila media_movel_;
-    media_atual_ = 0;
-    int leitura_atual_ = 0;
-    tensao_ref_ = referencia;
-    ultima_tensao_lida = 0;
-    if (tensao_ref_ == 1.1)
-    {
-        analogReference(INTERNAL);
-    }
+    pinMode(pino_adc_, INPUT);
+    configurar_referencia_analogica_privada();
 }
 
 Sensor::~Sensor()
 {
 }
 
-int Sensor::leitura()
+void Sensor::configurar_referencia_analogica_privada()
 {
-    ultima_tensao_lida = analogRead(pino_)*tensao_ref_/1023;
+    if (abs(tensao_referencia_ - 1.1f) < 0.01f)
+    {
+        analogReference(INTERNAL);
+    }
+    else if (abs(tensao_referencia_ - 2.56f) < 0.01f)
+    {
+        analogReference(DEFAULT);
+    }
+    else
+    {
+        analogReference(DEFAULT);
+    }
 }
 
-short Sensor:: tensao()
+int Sensor::ler_valor_cru_adc()
 {
-    if(millis() - media_movel_.tempo_comeco_fila() > 1000){    
-        for (int i = 0; i < qtd_media_movel_; i++)
-        {
-            media_movel_.pop();
-            media_movel_.push(leitura());
+    return analogRead(pino_adc_);
+}
+
+float Sensor::ler_tensao_instantanea()
+{
+    int valor_cru = ler_valor_cru_adc();
+    ultima_tensao_lida_ = (static_cast<float>(valor_cru) / ADC_MAX_VALUE) * tensao_referencia_;
+    return ultima_tensao_lida_;
+}
+
+float Sensor::ler_tensao_media()
+{
+    unsigned long tempo_primeiro_elemento = 0;
+    if (media_movel_.qtd_ > 0) {
+        tempo_primeiro_elemento = media_movel_.tempo_comeco_fila();
+    }
+
+
+    if (media_movel_.qtd_ == 0 || (millis() - tempo_primeiro_elemento > 1000 && media_movel_.qtd_ > 0) ) {
+        for (uint8_t i = 0; i < qtd_leituras_para_media_; ++i) {
+            if (media_movel_.qtd_ >= tam_janela_media_movel_ && tam_janela_media_movel_ > 0) {
+                media_movel_.pop();
+            }
+            if (media_movel_.qtd_ < tam_janela_media_movel_ || tam_janela_media_movel_ == 0) { // tam_janela_media_movel_ == 0 could mean dynamic size
+                 media_movel_.push(ler_valor_cru_adc());
+            } else if (tam_janela_media_movel_ > 0) { // Window is full, already popped
+                 media_movel_.push(ler_valor_cru_adc());
+            }
+        }
+    } else { // If less than 1 second and queue not empty, original code did one pop/push
+        if (media_movel_.qtd_ > 0) { // Only pop if not empty
+             media_movel_.pop();
+        }
+        // Ensure fila does not exceed tam_janela_media_movel_
+        if (media_movel_.qtd_ < tam_janela_media_movel_ || tam_janela_media_movel_ == 0) {
+            media_movel_.push(ler_valor_cru_adc());
+        } else if (tam_janela_media_movel_ > 0) { // Window is full, already popped
+            media_movel_.push(ler_valor_cru_adc());
         }
     }
-    else{
-        media_movel_.pop();
-        media_movel_.push(leitura());
+
+    if (media_movel_.qtd_ > 0) {
+        float media_adc_cru = static_cast<float>(media_movel_.media());
+        ultima_tensao_lida_ = (media_adc_cru / ADC_MAX_VALUE) * tensao_referencia_;
+    } else {
+        // Handle case where Fila is empty - perhaps return last known, or 0, or an error.
+        // For now, if it becomes empty, ultima_tensao_lida_ retains its previous value or initial 0.
+        // Or, read an instantaneous value if the filter is empty:
+        // ultima_tensao_lida_ = ler_tensao_instantanea();
     }
-    ultima_tensao_lida = media_movel_.media();
-    return ultima_tensao_lida;
+    return ultima_tensao_lida_;
 }
 
-float Sensor::grandeza(){
+float Sensor::calcular_grandeza()
+{
+    // Assumes ultima_tensao_lida_ has been updated by ler_tensao_instantanea() or ler_tensao_media()
+    return (coef_a_ * ultima_tensao_lida_) + coef_b_;
+}
 
+float Sensor::get_ultima_tensao_calculada() const
+{
+    return ultima_tensao_lida_;
 }
