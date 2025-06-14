@@ -64,4 +64,4 @@ private:
     No *fim_;       ///< Ponteiro para o último nó da fila.
     int media_;     ///< Média acumulada dos valores na fila.
 
-};};
+};
