@@ -1,9 +1,7 @@
 #include <Arduino.h>
 #include "botao.h"
-// Enum para definir o tipo de configuração do botão
-typedef enum type{PULL_UP, PULL_DOWN, PULL_UP_INTERNO} type_t;
-
 Botao::Botao(type_t tipo_t, int porta_t) {
+      inverter_porta = true;
       porta = porta_t;
       tipo = tipo_t;
       if (tipo == PULL_UP_INTERNO) {
@@ -11,6 +9,10 @@ Botao::Botao(type_t tipo_t, int porta_t) {
       } else if (tipo == PULL_UP) {
         pinMode(porta, INPUT);
       }
+      else {
+        inverter_porta = false;
+      }
+
       lastReading = digitalRead(porta);
       buttonState = lastReading;
       lastButtonState = lastReading;
@@ -45,4 +47,11 @@ bool Botao::botao_pressionado() {
   bool pressed = (lastButtonState == HIGH && buttonState == LOW);
   lastButtonState = buttonState;
   return pressed;
+}
+
+bool Botao::estado() {
+  if (inverter_porta) {
+    return (buttonState+1)%2;
+  }
+  return buttonState;
 }

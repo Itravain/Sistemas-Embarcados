@@ -42,9 +42,9 @@ public:
 
     /**
      * @brief Retorna a média atual dos valores armazenados na fila.
-     * @return A média dos valores como um inteiro.
+     * @return A média dos valores como um float.
      */
-    int media() const;
+    float media() const;
 
     /**
      * @brief Retorna o timestamp de quando o primeiro elemento (início) da fila foi adicionado.
@@ -62,6 +62,5 @@ public:
 private:
     No *inicio_;    ///< Ponteiro para o primeiro nó da fila.
     No *fim_;       ///< Ponteiro para o último nó da fila.
-    int media_;     ///< Média acumulada dos valores na fila.
-
+    float media_;   ///< Média acumulada dos valores na fila.
 };

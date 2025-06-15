@@ -5,7 +5,7 @@ fila::fila(){
     qtd_ = 0;
     inicio_ = NULL;
     fim_ = NULL;
-    media_ = 0;
+    media_ = 0.0f; // Inicializar como float
 }
 
 fila::~fila(){
@@ -42,15 +42,16 @@ void fila::push(int valor) {
 
     // Atualiza a média
     if (qtd_ == 1) {
-        media_ = valor;
+        media_ = static_cast<float>(valor);
     } else {
-        media_ = (media_ * (qtd_ - 1) + valor) / qtd_;
+        // Garantir aritmética de ponto flutuante
+        media_ = (media_ * static_cast<float>(qtd_ - 1) + static_cast<float>(valor)) / static_cast<float>(qtd_);
     }
 }
 
 int fila::pop() {
     if (inicio_ == NULL) {
-        return -1; // Ou alguma outra indicação de erro/fila vazia
+        return -1; 
     }
     No *auxiliar = inicio_;
     int numero = inicio_->numero;
@@ -63,17 +64,19 @@ int fila::pop() {
         inicio_->anterior = NULL;
     }
     free(auxiliar);
-    qtd_--;
+    qtd_--; // Decrementa qtd_ ANTES de recalcular a média
 
     if (qtd_ > 0) {
-        media_ = (media_ * (qtd_ + 1) - numero) / qtd_;
+        // Garantir aritmética de ponto flutuante. Usar qtd_ (nova quantidade) no denominador.
+        // A soma total anterior era media_ (antiga) * (qtd_ + 1) (quantidade antiga)
+        media_ = (media_ * static_cast<float>(qtd_ + 1) - static_cast<float>(numero)) / static_cast<float>(qtd_);
     } else {
-        media_ = 0;
+        media_ = 0.0f; // Fila vazia, média é 0
     }
     return numero;
 }
 
-int fila::media() const
+float fila::media() const // Modificado de int para float
 {
     return media_;
 }

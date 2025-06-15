@@ -6,13 +6,13 @@
 class Sensor {
 public:
     /**
-     * @brief Constructor for the Sensor class.
-     * @param pino_adc The analog pin where the sensor is connected.
-     * @param referencia_volts The ADC reference voltage (e.g., 5.0f for 5V, 3.3f for 3.3V, 1.1f for internal).
-     * @param tam_janela_media_movel Intended size of the moving average window (for Fila).
-     * @param qtd_leituras_para_media Number of readings to process in the moving average update logic.
-     * @param coef_a Coefficient 'a' for linear conversion (grandeza = a * voltage + b).
-     * @param coef_b Coefficient 'b' for linear conversion.
+     * @brief Construtor para a classe Sensor.
+     * @param pino_adc O pino analógico onde o sensor está conectado.
+     * @param referencia_volts A tensão de referência do ADC (ex: 5.0f para 5V, 3.3f para 3.3V, 1.1f para interna).
+     * @param tam_janela_media_movel Tamanho desejado da janela de média móvel (para a Fila).
+     * @param qtd_leituras_para_media Número de leituras a serem processadas na lógica de atualização da média móvel.
+     * @param coef_a Coeficiente 'a' para conversão linear (grandeza = a * tensao + b).
+     * @param coef_b Coeficiente 'b' para conversão linear.
      */
     Sensor(int pino_adc,
            float referencia_volts = 5.0f,
@@ -22,69 +22,69 @@ public:
            float coef_b = 0.0f);
 
     /**
-     * @brief Destructor for the Sensor class.
+     * @brief Destrutor para a classe Sensor.
      */
     ~Sensor();
 
-    // --- Primary Operational Methods ---
+    // --- Métodos Operacionais Primários ---
 
     /**
-     * @brief Reads the raw ADC value directly from the sensor's pin.
-     * @return The raw ADC value (e.g., 0-1023 for Arduino Uno, 0-4095 for ESP32).
+     * @brief Lê o valor ADC bruto diretamente do pino do sensor.
+     * @return O valor ADC bruto (ex: 0-1023 para Arduino Uno, 0-4095 para ESP32).
      */
     int ler_valor_cru_adc();
 
     /**
-     * @brief Reads the sensor, calculates the instantaneous voltage, and stores it internally.
-     * This method updates the value retrieved by `get_ultima_tensao_calculada()`.
-     * @return The instantaneous voltage as a float.
+     * @brief Lê o sensor, calcula a tensão instantânea e a armazena internamente.
+     * Este método atualiza o valor recuperado por `get_ultima_tensao_calculada()`.
+     * @return A tensão instantânea como um float.
      */
     float ler_tensao_instantanea();
 
     /**
-     * @brief Calculates and returns the voltage based on a moving average of raw ADC readings.
-     * This method manages an internal Fila (`media_movel_`) to store raw ADC values.
-     * The logic for updating the Fila is based on `qtd_leituras_para_media_` and timing, as seen in your .cpp.
-     * This method also updates the value retrieved by `get_ultima_tensao_calculada()`.
-     * @return The averaged voltage as a float.
+     * @brief Calcula e retorna a tensão com base em uma média móvel de leituras ADC brutas.
+     * Este método gerencia uma Fila interna (`media_movel_`) para armazenar valores ADC brutos.
+     * A lógica para atualizar a Fila é baseada em `qtd_leituras_para_media_` e temporização, conforme visto no seu .cpp.
+     * Este método também atualiza o valor recuperado por `get_ultima_tensao_calculada()`.
+     * @return A tensão média como um float.
      */
     float ler_tensao_media();
 
     /**
-     * @brief Converts the last calculated voltage (stored internally) into a physical quantity.
-     * Uses the linear transformation: physical_quantity = coef_a_ * voltage + coef_b_.
-     * It is recommended to call `ler_tensao_instantanea()` or `ler_tensao_media()` before this
-     * to ensure the internal voltage value is up-to-date.
-     * @return The calculated physical quantity as a float.
+     * @brief Converte a última tensão calculada (armazenada internamente) em uma grandeza física.
+     * Usa a transformação linear: grandeza_fisica = coef_a_ * tensao + coef_b_.
+     * Recomenda-se chamar `ler_tensao_instantanea()` ou `ler_tensao_media()` antes deste método
+     * para garantir que o valor da tensão interna esteja atualizado.
+     * @return A grandeza física calculada como um float.
      */
     float calcular_grandeza();
 
     // --- Getter ---
     /**
-     * @brief Gets the last voltage value that was calculated and stored by either
-     * `ler_tensao_instantanea()` or `ler_tensao_media()`.
-     * @return The last stored voltage as a float.
+     * @brief Obtém o último valor de tensão que foi calculado e armazenado por
+     * `ler_tensao_instantanea()` ou `ler_tensao_media()`.
+     * @return A última tensão armazenada como um float.
      */
     float get_ultima_tensao_calculada() const;
 
 private:
-    // Configuration members
+    // Membros de configuração
     int pino_adc_;
     float tensao_referencia_;
-    int tam_janela_media_movel_; // Parameter from constructor, for Fila or other logic
+    int tam_janela_media_movel_; 
     uint8_t qtd_leituras_para_media_;
 
-    float coef_a_; // For y = ax + b conversion
-    float coef_b_; // For y = ax + b conversion
+    float coef_a_; 
+    float coef_b_; 
 
-    // State members
-    fila media_movel_;          // IMPORTANT: This must be a member, not local to constructor.
-    float ultima_tensao_lida_;  // Stores the result of the latest voltage calculation.
+    // Membros de estado
+    fila media_movel_;          
+    float ultima_tensao_lida_;  
 
-    // Private helper methods
+    // Métodos auxiliares privados
     /**
-     * @brief Configures the analog reference voltage for ADC readings if necessary.
-     * Called internally by the constructor.
+     * @brief Configura a tensão de referência analógica para leituras ADC, se necessário.
+     * Chamado internamente pelo construtor.
      */
     void configurar_referencia_analogica_privada();
 };

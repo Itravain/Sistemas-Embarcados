@@ -63,40 +63,34 @@ float Sensor::ler_tensao_media()
             if (media_movel_.qtd_ >= tam_janela_media_movel_ && tam_janela_media_movel_ > 0) {
                 media_movel_.pop();
             }
-            if (media_movel_.qtd_ < tam_janela_media_movel_ || tam_janela_media_movel_ == 0) { // tam_janela_media_movel_ == 0 could mean dynamic size
+            if (media_movel_.qtd_ < tam_janela_media_movel_ || tam_janela_media_movel_ == 0) {
                  media_movel_.push(ler_valor_cru_adc());
-            } else if (tam_janela_media_movel_ > 0) { // Window is full, already popped
+            } else if (tam_janela_media_movel_ > 0) {
                  media_movel_.push(ler_valor_cru_adc());
             }
         }
-    } else { // If less than 1 second and queue not empty, original code did one pop/push
-        if (media_movel_.qtd_ > 0) { // Only pop if not empty
+    } else {
+        if (media_movel_.qtd_ > 0) {
              media_movel_.pop();
         }
-        // Ensure fila does not exceed tam_janela_media_movel_
         if (media_movel_.qtd_ < tam_janela_media_movel_ || tam_janela_media_movel_ == 0) {
             media_movel_.push(ler_valor_cru_adc());
-        } else if (tam_janela_media_movel_ > 0) { // Window is full, already popped
+        } else if (tam_janela_media_movel_ > 0) {
             media_movel_.push(ler_valor_cru_adc());
         }
     }
 
     if (media_movel_.qtd_ > 0) {
-        float media_adc_cru = static_cast<float>(media_movel_.media());
+        float media_adc_cru = media_movel_.media();
         ultima_tensao_lida_ = (media_adc_cru / ADC_MAX_VALUE) * tensao_referencia_;
     } else {
-        // Handle case where Fila is empty - perhaps return last known, or 0, or an error.
-        // For now, if it becomes empty, ultima_tensao_lida_ retains its previous value or initial 0.
-        // Or, read an instantaneous value if the filter is empty:
-        // ultima_tensao_lida_ = ler_tensao_instantanea();
     }
     return ultima_tensao_lida_;
 }
 
 float Sensor::calcular_grandeza()
 {
-    // Assumes ultima_tensao_lida_ has been updated by ler_tensao_instantanea() or ler_tensao_media()
-    return (coef_a_ * ultima_tensao_lida_) + coef_b_;
+    return (coef_a_ * ler_tensao_media()) + coef_b_;
 }
 
 float Sensor::get_ultima_tensao_calculada() const
