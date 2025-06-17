@@ -93,7 +93,17 @@ void loop(){
     intensidade_arranjo(leds, 100 - (dados.luminosidade*100/1.1), 3);
 
     //Atualiza led temperatura. Caso a temperatura varie 5 graus, o led estará aceso completamente.
-    led_temp.intensidade(abs(dados.temperatura - temperaturaInicial)*20);
+    static int intensidade_led = 0;
+    if((dados.temperatura - temperaturaInicial) < 0){
+      intensidade_led = 0;
+    }
+    else if (dados.temperatura - temperaturaInicial > 5){
+      intensidade_led = 100;
+    }
+    else{
+      intensidade_led = (dados.temperatura - temperaturaInicial)*20;
+    }
+    led_temp.intensidade(intensidade_led);
 
     //Caso o estado do botão seja alterado
     if (dados.botao != estado_anterior){
@@ -117,7 +127,7 @@ void loop(){
   }
   break;
   case menu:{
-    unsigned long tempo_menu = 3000;
+    unsigned long tempo_menu;
     if (maq_estados.primeira_vez_no_estado_atual()){
       String comando = Serial.readStringUntil('\n');
       comando.trim();
@@ -129,6 +139,7 @@ void loop(){
         lcd.setCursor(0, 0);
         lcd.print("Temp: ");
         lcd.print(dados.temperatura);
+        tempo_menu = 3000;
       }
       else if (comando.equalsIgnoreCase("l")) {
         Serial.print("Luminosidade: ");
@@ -137,6 +148,7 @@ void loop(){
         lcd.setCursor(0, 0);
         lcd.print("Luz: ");
         lcd.print(dados.luminosidade);
+        tempo_menu = 3000;
       }
 
       else if (comando.equalsIgnoreCase("o")) {
